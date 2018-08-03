@@ -1,0 +1,31 @@
+---
+title: "Data Downloading"
+author: "Frederick Boehm"
+date: "8/3/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+We start with materials that Keller et al. (2018, GENETICS) first reported. The text of their article is available here: 
+
+http://www.genetics.org.ezproxy.library.wisc.edu/content/209/1/335
+
+or, for those not at the U. of Wisconsin, 
+
+http://www.genetics.org/content/209/1/335
+
+
+
+We download their data from Data Dryad: 
+
+https://datadryad.org/resource/doi:10.5061/dryad.pj105
+
+Note that the above url gives information on citing and using the data that they share freely. I'll need to reference this information in my thesis.
+
+
+
+
+
