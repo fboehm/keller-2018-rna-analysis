@@ -23,7 +23,9 @@ We download their data from Data Dryad:
 
 https://datadryad.org/resource/doi:10.5061/dryad.pj105
 
-Note that the above url gives information on citing and using the data that they share freely. I'll need to reference this information in my thesis.
+Note that the above url gives information on citing and using the data that they share freely. **I'll need to reference this information in my thesis.**
+
+
 
 
 
