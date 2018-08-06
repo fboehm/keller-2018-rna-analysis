@@ -43,6 +43,9 @@ Keller et al, in their supplemental materials on figshare, tabulate the 5 hotspo
 This table provides a foundation for generating hypotheses that my test of pleiotropy v separate QTL can address. For example, we see that, on chromosome 2 at 165.5 Mb, 147 expression traits associate. Keller et al. say that the candidate mediator is Hnf4a, and that 88 of the 147 associated expression traits have a large LOD drop in the mediation test. It might be cool to see how many of the 147 expression traits are pleiotropic with the Hnf4a gene expression trait. That is, I could run 147 bivariate tests, each including the Hnf4a gene expression trait and exactly one of the other 147 traits.
 
 
-
 I need to see if Keller et al. share a list of the identities of the genes that associate with each hotspot, as well as a list of the genes with mediation test results.
+
+Another question that I have is "How did Keller et al decide on the putative mediator for each of the five hotspots?"
+
+Presumably they describe this in the article text.
 
