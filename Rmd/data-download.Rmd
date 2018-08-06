@@ -29,10 +29,20 @@ Note that the above url gives information on citing and using the data that they
 
 README.README has info on the objects that are contained within the file "Attie_DO378_eQTL_viewer_v1.Rdata".
 
-Let's load the .Rdata file into an R session.
+Let's load the Rdata file into an R session.
 
 ```{r}
 load("../data/Attie_DO378_eQTL_viewer_v1.Rdata")
 ```
 
+
+## Keller et al 2018, supplementary table 1
+
+Keller et al, in their supplemental materials on figshare, tabulate the 5 hotspots and list the number of traits that demonstrate evidence for mediation at each. They also list a candidate mediator at each hotspot. They also list the number of eQTL for each hotspot, not just the number of genes that are mediated.
+
+This table provides a foundation for generating hypotheses that my test of pleiotropy v separate QTL can address. For example, we see that, on chromosome 2 at 165.5 Mb, 147 expression traits associate. Keller et al. say that the candidate mediator is Hnf4a, and that 88 of the 147 associated expression traits have a large LOD drop in the mediation test. It might be cool to see how many of the 147 expression traits are pleiotropic with the Hnf4a gene expression trait. That is, I could run 147 bivariate tests, each including the Hnf4a gene expression trait and exactly one of the other 147 traits.
+
+
+
+I need to see if Keller et al. share a list of the identities of the genes that associate with each hotspot, as well as a list of the genes with mediation test results.
 
