@@ -1,0 +1,159 @@
+---
+title: "Chromosome 2 hotspot analysis"
+author: "Frederick Boehm"
+date: "8/6/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+The chromosome 2 hotspot in the Keller data set is at 165.5 Mb. Supplemental table 1 of Keller et al 2018 states that 147 genes map to it, 88 of which are mediated. They identify Hnf4a as the candidate mediator. 
+
+I want to look at the intermediate results that they've stored in their file on DataDryad: https://datadryad.org/bitstream/handle/10255/dryad.166774/Attie_DO378_eQTL_viewer_v1.Rdata?sequence=2
+
+I previously downloaded this Rdata file and saved it to the "data" subdirectory for the current project. 
+
+In loading into my R session, I see that it contains multiple objects.
+
+```{r}
+load("../data/Attie_DO378_eQTL_viewer_v1.Rdata")
+ls()
+```
+
+I want to find the identities of the expression traits that map to the chromosome 2 hotspot. Ideally, I'd like to have already tabulated the LOD peak heights and the extent to which the LOD peak height drops in the mediation test.
+
+At least some of this information is contained in the object `dataset.islet.rnaseq`, a list that contains multiple sub-objects.
+
+```{r}
+dataset.islet.rnaseq
+```
+
+My interest is first in accessing the sub-object `dataset.islet.rnaseq$annots$hotspot`.
+
+```{r}
+dataset.islet.rnaseq$annots
+dim(dataset.islet.rnaseq$annots)
+```
+
+We see that there's one row per expression trait, and eleven columns.
+
+The column titled "hotspot" is of interest, as it tells us which, if any, hotspot associates with the specified trait. It's unclear to me what Keller et al. did if a single expression trait mapped to more than one hotspot.
+
+```{r}
+table(dataset.islet.rnaseq$annots$hotspot)
+```
+
+It looks like these numbers don't perfectly match those in the table in file TableS1.docx. They are close. Could it be that the definition of gene v transcript is an issue here? I'm not sure.
+
+At any rate, for now, I'll continue with this data set, even though I am a little nervous about why the numbers don't match perfectly those in Table S1.
+
+I want to subset the table `dataset.islet.rnaseq$annots` so that I have only those expression traits that map to the chromosome 2 hotspot.
+
+```{r}
+library(tidyverse)
+dataset.islet.rnaseq$annots %>%
+  filter(hotspot == "chr2")
+```
+
+We see that we have a table with 139 rows. The table, at this point, contains only expression trait annotation information. It doesn't have the LOD peak heights for association on chromosome 2, nor does it have any mediation test results.
+
+## Finding univariate assocation LOD scores for chr2 hotspot-associated expression traits
+
+I want to see if the univariate LOD scores are stored somewhere in the Rdata file from DataDryad.
+
+In looking closer at the object `dataset.islet.rnaseq`
+
+```{r}
+dataset.islet.rnaseq$lod.peaks
+```
+
+
+we see that there is a sub-item called `lod.peaks`. Let's examine it.
+
+```{r}
+dim(dataset.islet.rnaseq$lod.peaks)
+```
+
+It seems as if this table records every association (genome-wide) of every expression trait. It also includes the LOD peak height and position and chromosome.
+
+Let's filter this table so that we have only traits with associations on chr 2.
+
+```{r}
+dataset.islet.rnaseq$lod.peaks %>%
+  filter(chrom == "2")
+
+```
+
+The code above yields a table with 3458 rows. Of course, I'm really only interested in those traits that map to the hotspot. I'm not exactly sure how hotspot membership is determined, but we can use the tibble from earlier, with one of the `join` functions from `dplyr`, to create a table that contains only those trait associations that Keller et al assigned to the chromosome 2 hotspot.
+
+```{r}
+dataset.islet.rnaseq$annots %>%
+  filter(hotspot == "chr2") %>%
+  left_join(y = dataset.islet.rnaseq$lod.peaks, by = c("gene_id" = "annot.id")) %>% 
+  filter(chrom == "2") %>%
+  arrange(desc(lod))
+```
+
+The above chunk gives a tibble with 139 rows, same as the number of rows in the object `dataset.islet.rnaseq$annots` after we filtered by associations on chromosome 2.
+
+The resulting tibble, above, has 15 columns with these names:
+
+```{r}
+dataset.islet.rnaseq$annots %>%
+  filter(hotspot == "chr2") %>%
+  left_join(y = dataset.islet.rnaseq$lod.peaks, by = c("gene_id" = "annot.id")) %>% 
+  filter(chrom == "2") %>%
+  colnames
+
+```
+
+I want to see if *Hnf4a* gene expression trait is included in this tibble.
+
+```{r}
+dataset.islet.rnaseq$annots %>%
+  filter(hotspot == "chr2") %>%
+  left_join(y = dataset.islet.rnaseq$lod.peaks, by = c("gene_id" = "annot.id")) %>% 
+  filter(chrom == "2") %>%
+  filter(symbol == "Hnf4a")
+
+```
+
+We see that *Hnf4a* is absent from this list. 
+
+This complicates my analysis plans. I had wanted to use the *Hnf4a* gene expression trait in my pleiotropy v separate QTL tests in chromosome 2 hotspot traits.
+
+Remember that I filtered on gene expression traits that Keller et al assigned to chr2 hotspot. Yet, I don't really know the criteria that they used for making this assignment. 
+
+It might be that Keller et al. chose to not assign local eQTLs to hotspots - in other words, that, when making the hotspot assignments, an eligibility criterion was nonlocal-ness of the expression trait. 
+
+Let's see if I can find *Hnf4a* gene in the `lod.peaks` object and pull out all of its peaks. One small consideration is that `lod.peaks` data.frame doesn't have gene symbols. So, we check the ensembl website to see find the mus musculus ensembl id for *Hnf4a*: 
+
+https://useast.ensembl.org/Mus_musculus/Gene/Summary?g=ENSMUSG00000017950;r=2:163506808-163572910
+
+It turns out to be: ENSMUSG00000017950
+
+
+
+```{r}
+dataset.islet.rnaseq$lod.peaks %>%
+  filter(annot.id == "ENSMUSG00000017950")
+```
+
+As I hypothesized, it seems that there is a strong local eQTL for *Hnf4a*, but, presumably by definition, it is not given the designation as belonging to the chromosome 2 hotspot.
+
+So, we can indeed proceed with our initial analysis plan to perform multiple tests, two traits at a time, of pleiotropy v separate QTL. Each test will use the *Hnf4a* gene expression trait and exactly one trait that is assigned to the chromosome 2 hotspot. 
+
+## Processed expression traits are in the Rdata file from DataDryad
+
+The list `dataset.islet.rnaseq` from the downloaded Rdata file (ie, from DataDryad) contains a sub-object called `expr`. It has dimensions 378 rows by 21771 columns. Presumably, it is the processed expression data, with one row per mouse and one column per expression trait. 
+
+I think that I want to use the data in this object, `dataset.islet.rnaseq$expr` in my tests of pleiotropy v separate QTL.
+
+## Prioritizing the chromosome 2 hotspot traits for tests of pleiotropy v separate QTL
+
+I think it's reasonable to first analyze those traits with the highest LOD scores (ie, within the traits that are part of the chromosome 2 hotspot).
+
