@@ -157,3 +157,106 @@ I think that I want to use the data in this object, `dataset.islet.rnaseq$expr` 
 
 I think it's reasonable to first analyze those traits with the highest LOD scores (ie, within the traits that are part of the chromosome 2 hotspot).
 
+## Analysis of the first pair of traits: Hnf4a and Myo15b
+
+The Ensembl ids are:
+
+Hnf4a: ENSMUSG00000017950
+Myo15b: ENSMUSG00000034427
+
+We'll now create a dataframe with 378 rows and two columns, one for each of the two traits.
+
+```{r}
+colnames(dataset.islet.rnaseq$expr)
+ee <- dataset.islet.rnaseq$expr[ , colnames(dataset.islet.rnaseq$expr) %in% c("ENSMUSG00000017950", "ENSMUSG00000034427")]
+```
+
+## Preparing inputs for qtl2pleio::scan_pvl
+
+We need to prepare the inputs for use with `qtl2pleio::scan_pvl`. Both `K` and `genoprobs$`8`` have 500 subjects. We need to subset both objects and ensure that the subject IDs are ordered properly.
+
+### Subsetting
+
+For subsetting `K`, we need to first select the appropriate 500 x 500 kinship matrix from the list of LOCO kinship matrices.
+
+```{r}
+k2 <- K$`2`[rownames(K$`2`) %in% rownames(ee), colnames(K$`2`) %in% rownames(ee)]
+```
+
+For the subsetting of `genoprobs`, we first choose the appropriate chromosome (ie , 2) then do the subsetting.
+
+```{r}
+g2 <- genoprobs$`2`[rownames(genoprobs$`2`) %in% rownames(ee) , , ]
+```
+
+### Checking ordering of subject IDs
+
+```{r}
+library(qtl2pleio)
+```
+
+```{r}
+check_dimnames(ee, g2)
+check_dimnames(ee, k2)
+check_dimnames(k2, k2, ydim = 2)
+```
+
+## Two-dimensional scan
+
+First, we need to identify the range of the scan on chromosome 2. Namely, we need the index of the chromosome 2 marker at which we want the scan to start.
+
+Let's examine the `markers` object:
+
+```{r}
+library(dplyr)
+```
+
+
+
+```{r}
+markers %>%
+  filter(chr == "2") -> m2
+which(m2$pos > 161.5)
+which(m2$pos < 166.5) %>% tail
+```
+
+The above tells us to start at marker index 3702 and to have a total of 202 markers in the scan.
+
+```{r}
+scan_pvl(g2, ee, k2, start_snp1 = 3702, n_snp = 202) -> s_out
+```
+
+## Summarizing the output of `scan_pvl`
+
+We then calculate the LRT statistic.
+
+```{r}
+calc_lrt_tib(s_out)
+```
+
+We also create a profile LOD plot.
+
+```{r}
+tidy_scan_pvl(s_out, pmap = map$`2`) %>%
+  add_intercepts(c(163, 164)) %>%
+  plot_pvl(phenames = colnames(ee))
+
+```
+
+## Compare the allele effects plots
+
+```{r}
+library(qtl2)
+```
+We first need to do the one-dimensional QTl coefficient calculations for both traits.
+
+
+```{r}
+scan1coef(genoprobs[, 2], ee[, 1], K$`2`, chrom = 2) %>% plot_coefCC(map = map[2])
+```
+
+```{r}
+scan1coef(genoprobs[, 2], ee[, 2], K$`2`, chrom = 2) %>% plot_coefCC(map = map[2])
+```
+
+
